@@ -60,7 +60,7 @@ class Server:
             monitor_24h_data = self.monitor.get_last_24h_monitor_data(client_timezone)
             monitor_7days_data = self.monitor.get_last_7days_monitor_data(client_timezone)
             monitor_30days_data = self.monitor.get_last_30days_monitor_data(client_timezone)
-            monitor_12months_data = self.monitor.get_last_12months_monitor_data(client_timezone)
+            monitor_12months_data = self.monitor.get_last_12months_monitor_data()
             payload = {
                 "1_day": monitor_24h_data,
                 "1_week": monitor_7days_data,
@@ -83,6 +83,7 @@ class Server:
             response = web.Response(text=json.dumps({
                 'error': str(e),
             }), status=500, content_type="application/json", )
+            logger.error(str(e), exc_info=True)
 
         duration = time.time() - start
         logger.info(

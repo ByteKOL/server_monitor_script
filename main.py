@@ -8,6 +8,8 @@ from scripts.monitor import Monitor
 from scripts.server import Server
 from scripts.logger_config import logger
 import config
+import signal
+
 
 monitor = Monitor()
 server = Server(monitor)
@@ -37,7 +39,13 @@ async def cleanup_background_tasks(app):
     app['hourly_task'].cancel()
     await asyncio.gather(app['sampling_task'], app['hourly_task'], return_exceptions=True)
 
+def shutdown_signal_handler():
+    logger.info("Received termination signal: SIGTERM, shutting down gracefully...")
+    asyncio.create_task(app.shutdown())
+    asyncio.create_task(app.cleanup())
+
 async def main():
+    logger.info("=======================================")
     logger.info("Starting monitor system")
     app = server.app
     app.on_startup.append(start_background_tasks)
@@ -48,9 +56,13 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
+    # Register signals (SIGINT = Ctrl+C, SIGTERM = systemctl stop)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, shutdown_signal_handler)
+
     app = loop.run_until_complete(main())
 
     try:
-        web.run_app(app, port=config.http_port)
+        web.run_app(app, port=config.http_port, handle_signals=False)
     except (KeyboardInterrupt, SystemExit):
         logger.info("Server stopped manually")

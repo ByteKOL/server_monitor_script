@@ -328,21 +328,12 @@ class Monitor:
             record['datetime'] = utc_time.astimezone(client_tz).strftime('%Y-%m-%d')
         return records_1day
 
-    def _get_1month_monitor_records(self, client_time_zone: str, max_records: int):
+    def _get_1month_monitor_records(self, max_records: int):
         if not os.path.exists(config.json_file_path_1month):
             raise ClientException("No Data")
         with open(config.json_file_path_1month, 'r') as f:
             current_1month_file_data = json.load(f)
-        records_1month = current_1month_file_data[-max_records:]
-        try:
-            client_tz = pytz.timezone(client_time_zone)
-        except pytz.exceptions.UnknownTimeZoneError:
-            raise ClientException(f"Invalid Timezone: {client_time_zone}")
-
-        for record in records_1month:
-            utc_time = datetime.datetime.fromisoformat(record['datetime'])
-            record['datetime'] = utc_time.astimezone(client_tz).strftime('%Y-%m')
-        return records_1month
+        return current_1month_file_data[-max_records:]
 
     def get_last_24h_monitor_data(self, client_time_zone: str):
         return self._get_1h_monitor_records(client_time_zone=client_time_zone, max_records=24)
@@ -353,5 +344,5 @@ class Monitor:
     def get_last_30days_monitor_data(self, client_time_zone: str):
         return self._get_1day_monitor_records(client_time_zone=client_time_zone, max_records=30)
 
-    def get_last_12months_monitor_data(self, client_time_zone: str):
-        return self._get_1month_monitor_records(client_time_zone=client_time_zone, max_records=12)
+    def get_last_12months_monitor_data(self):
+        return self._get_1month_monitor_records(max_records=12)

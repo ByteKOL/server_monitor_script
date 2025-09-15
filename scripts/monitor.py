@@ -130,7 +130,7 @@ class Monitor:
         self.cpu_per_core_avg = []
         self.cpu_total_avg = 0
         self.ram_avg = 0
-        self.ram_min = 0
+        self.ram_min = float("inf")
         self.ram_max = 0
         self.bandwidth_total = 0.0
         self.disk_used = 0.0

@@ -102,7 +102,7 @@ class Server:
         logger.info(f"WebSocket connected: {request.remote}")
 
         try:
-            while True:
+            while not ws.closed:
                 # Send latest sample to client
                 await ws.send_json(self.monitor.get_and_update_current_stats())
                 await asyncio.sleep(1)

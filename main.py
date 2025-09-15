@@ -35,14 +35,11 @@ async def start_background_tasks(app):
 async def cleanup_background_tasks(app):
     logger.info("Shutting down, saving last hourly data...")
     monitor.push_to_file()  # Save remaining data
+    logger.info("saving last hourly data done.")
+
     app['sampling_task'].cancel()
     app['hourly_task'].cancel()
-    await asyncio.gather(app['sampling_task'], app['hourly_task'], return_exceptions=True)
-
-def shutdown_signal_handler():
-    logger.info("Received termination signal: SIGTERM, shutting down gracefully...")
-    asyncio.create_task(app.shutdown())
-    asyncio.create_task(app.cleanup())
+    await asyncio.gather(app['sampling_task'], app['hourly_task'], return_exceptions=False)
 
 async def main():
     logger.info("=======================================")
@@ -56,9 +53,10 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    # Register signals (SIGINT = Ctrl+C, SIGTERM = systemctl stop)
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, shutdown_signal_handler)
+    # # Register signals (SIGINT = Ctrl+C, SIGTERM = systemctl stop)
+    # shutdown_task = lambda : asyncio.create_task(cleanup_background_tasks())
+    # for sig in (signal.SIGINT, signal.SIGTERM):
+    #     loop.add_signal_handler(sig, shutdown_task)
 
     app = loop.run_until_complete(main())
 
